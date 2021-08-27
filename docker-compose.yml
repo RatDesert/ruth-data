@@ -1,0 +1,42 @@
+version: "3.7"
+
+services:
+  subscriber:
+    build: ./subscriber
+    depends_on:
+      - redis
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    volumes:
+      - ./subscriber/src:/src
+    env_file:
+      - ./.env
+    ports:
+      - 8001:8001
+    networks:
+      - hostnet
+      - default
+
+  publisher:
+    build: ./publisher
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    volumes:
+      - ./publisher/src:/src
+    depends_on:
+      - redis
+    env_file:
+      - ./.env
+    ports:
+      - 8002:8002
+    networks:
+      - hostnet
+      - default
+
+  redis:
+    image: redis:6
+
+networks:
+  hostnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
